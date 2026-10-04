@@ -1,0 +1,4 @@
+sldl 2.6.0 (official release, shipped unmodified)
+Upstream: https://github.com/fiso64/sockseek  (the project was called slsk-batchdl / sldl before it was renamed Sockseek;
+old links redirect). Releases: https://github.com/fiso64/sockseek/releases
+Mucify deliberately stays on this tested version and never downloads a newer one.

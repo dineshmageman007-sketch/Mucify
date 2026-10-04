@@ -1,0 +1,24 @@
+MUCIFY
+
+Mucify is free software, released under the GNU General Public License,
+version 3 or (at your option) any later version. The full text is installed
+with the program (licenses folder) and is shown in Settings > About & legal.
+
+Copyright (C) 2026 mageman007 and contributors.
+Source code: https://github.com/dineshmageman007-sketch/Mucify
+
+Mucify comes with ABSOLUTELY NO WARRANTY, to the extent permitted by law.
+
+Mucify is an independent project. It is not affiliated with Qobuz, Soulseek,
+Spotify, chosic.com, Microsoft or the authors of the tools it bundles
+(sldl, rsgain). It does not provide any music. You are responsible for
+using it lawfully: only download music you have the right to obtain, and
+follow the terms of the services you connect to.
+
+Mucify bundles third-party programs under their own licences:
+  - sldl (slsk-batchdl) - GNU AGPL-3.0
+  - rsgain - BSD 2-Clause
+See the licenses folder in the install directory for details.
+
+Privacy: Mucify has no telemetry. Your Soulseek password and Qobuz token are
+stored in plain text on this PC (%APPDATA%\Mucify).

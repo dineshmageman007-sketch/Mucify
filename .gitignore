@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+build/
+dist/
+installer/Output/
+installer/redist/
+config.json
+sldl.conf
+.venv/
+.pytest_cache/

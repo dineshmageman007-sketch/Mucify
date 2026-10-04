@@ -1,0 +1,122 @@
+name: Build Mucify (Windows installer)
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write       # lets the tag build attach the installer to a GitHub Release
+  id-token: write       # build provenance (verifiable "built by GitHub Actions" proof)
+  attestations: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          architecture: x64
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Work out version
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.ref }}" -like "refs/tags/v*") { $v = "${{ github.ref_name }}".TrimStart("v") }
+          else { $v = (Select-String -Path mucify\__init__.py -Pattern '__version__\s*=\s*"([^"]+)"').Matches[0].Groups[1].Value }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "Version: $v"
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Get-Command ISCC.exe -ErrorAction SilentlyContinue) -and -not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --no-progress -y
+          }
+
+      - name: Build (tests, PyInstaller, self-test, installer)
+        shell: pwsh
+        run: ./build.ps1 -Version "${{ steps.ver.outputs.version }}"
+
+      - name: Portable zip (no installer needed)
+        shell: pwsh
+        run: Compress-Archive -Path dist\Mucify -DestinationPath "installer\Output\Mucify-Portable-${{ steps.ver.outputs.version }}.zip"
+
+      - name: SHA-256 checksums
+        id: sums
+        shell: pwsh
+        run: |
+          Set-Location installer\Output
+          $lines = Get-ChildItem Mucify-Setup-*.exe, Mucify-Portable-*.zip | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name }
+          $lines | Set-Content -Encoding ascii SHA256SUMS.txt
+          $lines | ForEach-Object { Write-Host $_ }
+
+      - name: Release notes (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $sums = Get-Content installer\Output\SHA256SUMS.txt -Raw
+          $notes = @"
+          ## Install
+          1. Download **Mucify-Setup-${{ steps.ver.outputs.version }}.exe** below and run it.
+          2. If Windows says *"Windows protected your PC"*, click **More info -> Run anyway**. Mucify is new and the installer isn't code-signed yet, which is what triggers that screen for every unsigned app.
+          3. Open Mucify and follow the one-minute first-run setup.
+
+          Prefer no installer? Download **Mucify-Portable-${{ steps.ver.outputs.version }}.zip**, unzip it and run ``Mucify.exe``.
+
+          ## Verify your download
+          ``````
+          $sums
+          ``````
+          Compare with ``certutil -hashfile <file> SHA256`` (Windows) or ``Get-FileHash <file>`` (PowerShell). The build is also attested by GitHub Actions.
+
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for the full list of changes.
+          "@
+          # remove the YAML indentation
+          ($notes -split "`n" | ForEach-Object { $_ -replace '^          ', '' }) -join "`n" | Set-Content -Encoding utf8 release-notes.md
+
+      - name: Attest build provenance (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        continue-on-error: true      # needs a public repository; never blocks the release
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            installer/Output/Mucify-Setup-*.exe
+            installer/Output/Mucify-Portable-*.zip
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mucify-Setup-${{ steps.ver.outputs.version }}
+          path: installer/Output/Mucify-Setup-*.exe
+          if-no-files-found: error
+
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mucify-Portable-${{ steps.ver.outputs.version }}
+          path: installer/Output/Mucify-Portable-*.zip
+          if-no-files-found: error
+
+      - name: Publish GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Mucify ${{ steps.ver.outputs.version }}
+          body_path: release-notes.md
+          files: |
+            installer/Output/Mucify-Setup-*.exe
+            installer/Output/Mucify-Portable-*.zip
+            installer/Output/SHA256SUMS.txt
+          generate_release_notes: true

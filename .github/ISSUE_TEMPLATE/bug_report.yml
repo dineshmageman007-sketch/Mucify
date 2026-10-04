@@ -1,0 +1,48 @@
+name: Bug report
+description: Something isn't working as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make Mucify better! **Never paste passwords or your Qobuz token.** Remove them from any logs first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead? Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Mucify version
+      description: Shown in Settings → About & legal.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 23H2"
+  - type: dropdown
+    id: step
+    attributes:
+      label: Where did it happen?
+      options:
+        - Installer
+        - First-run setup
+        - Playlist Manager
+        - Qobuz Enrich / Qobuz connection
+        - Downloader
+        - Post-Processing (ReplayGain)
+        - Mini player / background music
+        - Settings / Reset / Uninstall
+        - Other
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: "If Mucify crashed, attach `%APPDATA%\\Mucify\\logs\\crash.log`."
+      render: text

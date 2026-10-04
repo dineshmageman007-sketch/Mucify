@@ -1,0 +1,4 @@
+Flask>=3.0,<4
+requests>=2.31
+mutagen>=1.47
+pywebview>=5.3,<7

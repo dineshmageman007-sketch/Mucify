@@ -1,0 +1,3 @@
+pyinstaller>=6.6
+pytest>=8
+pip-licenses>=5

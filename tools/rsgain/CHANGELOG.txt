@@ -1,0 +1,146 @@
+v3.7 (2026-03-17)
+- Add -e option to add album gain normalization method per AES77 (using loudest track's gain)
+- When skipping files with existing gain information (-S mode), also consider Opus header gain information
+- Fix memory-related bug
+- Handle exception when setting locale
+- Static builds: Upgrade to FFmpeg 8
+
+v3.6 (2025-02-08)
+- Add "dual mono" -d option to treat mono files as stereo
+- Add "Average Loudness" statistic to Easy Mode end-of-scan statistic report
+- Report warning instead of error if a file does not have an audio stream
+- Fix error reporting for tag writing errors. Previously, when an error occured while writing tags to a file, the program would fail to set a non-zero exit code in Custom Mode, or include it in the end-of-scan error report in Easy Mode
+
+v3.5.3 (2024-11-16)
+- Fix preserve file modification time feature for Opus files
+
+v3.5.2 (2024-08-07)
+- In Easy Mode, ignore macOS AppleDouble files (beginning with ._)
+- Disable error messages while a multithreaded scan is in-progress (errors will be reported at end of scan only)
+- Windows: Fix resource conflict issue when writing to Opus header
+- Unix: Fully support C++23 replacement of fmt dependency
+
+v3.5.1 (2024-06-08)
+- Fix header gain calculation for multichannel Opus files
+- Static builds: Upgrade to FFmpeg 7
+
+v3.5 (2024-02-25)
+- Add -p option to preserve file modification times
+- In Custom Mode, immediately fail if any file in the list does not exist or is of unsupported type
+- Fix segfault that occurs when attempting to tag corrupted MP4 files
+- Provide static builds for macOS and Linux
+- Unix: Include optional manpage with installation
+- Windows: Support long paths
+- Static builds: Upgrade to TagLib 2
+
+v3.4 (2023-09-11)
+- Added support for Tom's lossless Audio Kompressor (TAK) format
+- Added -O option 'a' which sorts the output by filename alphanumerically
+- Added Custom Mode -o option 's' which forces Opus files to normalize to -23 LUFS regardless of the target loudness setting
+- Support files with .mp4 file extension
+  - Introduce Easy Mode preset option "SkipMP4" which allows users to opt out of the new behavior
+- When scanning completely silent tracks, the program now writes "0.00 dB" and "0.000000" as gain and peak tags, respectively. Previously, the program would completely skip over these files without writing any tags to them
+  - Silent tracks are not included in album gain calculations to keep results consistent with previous versions
+- -I 'keep' mode now default in both Custom Mode and Easy Mode
+- Fix TagMode 'n' option (regression from v3.2)
+
+
+v3.3 (2023-04-23)
+- New -I mode 'keep' detects the file's existing ID3v2 version, and preserves it
+  - Less disruptive to files, less prone to data loss as TagLib sometimes discards frames when converting between ID3v2 versions.
+  - Will be made the default mode in a future release
+- Handle file extensions case insensitively when determining file type
+- When removing ReplayGain tags from ID3 formats, also remove legacy RVAD and RVA2 ("Relative Volume Adjustment") frames which conflict with ReplayGain
+- Fix segfault caused by unusual file durations
+- Added -O 's' mode to write sep header to CSV output for Microsoft Excel compatibility.
+  - Mode argument for -O is optional to maintain backwards compatibility
+- Windows: Search for Easy Mode presets in a default user directory similar to the macOS and Linux versions
+- Windows: Upgrade to FFmpeg 6
+
+v3.2.1 (2023-02-26)
+- Fix minor bug with Easy Mode statistics output
+- Port to new FFmpeg channel layout API
+- Remove deprecated TagLib functions
+
+v3.2 (2023-02-10)
+- Support scanning directories with multiple file types in Easy Mode
+- Redesigned the multithreading mode to increase reliability and effiency
+- Progress update in multithreading mode now detects the width of the console and limits it so the output doesn't wrap to a new line on long directory names
+- Fix long options
+- Fix a segfault that occurs when scanning some corrupt MP3 files
+- Windows: Upgrade to FFmpeg 5
+
+v3.1.1 (2022-11-15)
+- Fix ID3v2 version parsing bug
+
+v3.1 (2022-11-04)
+- Added support for Musepack format
+- Added support for HE-AAC, xHE-AAC formats
+- Added option '-S' to skip files with existing ReplayGain data
+- Easy mode: Added tag mode 'n' which will always skip files regardless of whether or not they have existing ReplayGain tags
+- Always fail if a requested command line option or scan preset is invalid
+- Build binary packages via GitHub Actions CI
+- Added support for BSD operating systems
+
+v3.0.1 (2022-10-13)
+- Fixed inconsistencies in tab output formatting
+
+v3.0 (2022-09-14)
+- Massive internal rewrite:
+    - Source code is now purely C++ instead of mixed C/C++
+    - Text formating and output now utilize the fmt library, which is safer and typically faster than C stdio implementations
+- Easy Mode multithreaded now generates scan jobs per-directory instead of per-file, which provides an approximately 15-20% performance boost due to reduced thread idling time
+- Added progress updates for Easy Mode multithreaded
+- Added -m MAX option to use the maximum concurrent threads value provided by the OS
+- Fixed a critical bug inherited from loudgain where the program segfaults when trying to delete tags from M4A or WMA files
+- Added -t option which allows users to choose between sample peak and true peak for peak calculations. Sample peak now default in both Easy Mode and Custom Mode
+- Added -O option in Easy Mode which outputs a .csv spreadsheet scan log in every scanned directory
+- Added more statistics to Easy Mode output
+- Write uppercase tags by default for all tag types in Easy Mode
+- Optimized scan progress bar, resulting in significant speed boost for Windows single threaded scanning
+- "Overrides" feature renamed "Preset"
+  - Specified with -p instead of -o
+  - Support preset name as argument, which will automatically find the preset in the predetermined location(s) per platform
+  - Support "Global" section in preset, which allows the user to specify settings for all formats to reduce duplication
+  - Changed the name of setting keys in accordance with command line flags
+  - Ship EBU R 128 preset and "loudgain" preset based on rgbpm settings
+- Removed tag modes that enabled non-standard behavior:
+  - -s e mode which wrote non-standard REPLAYGAIN_REFERENCE_LOUDNESS and REPLAYGAIN_*_RANGE tags
+  - -s l mode which wrote non-standard LU units to *_GAIN tags instead of dB
+- Changed how target loudness is specified:
+  - Removed -d option which specified a "pre-gain" from -18 LUFS
+  - Replaced with -l option which allows the user to specify the target loudness directly in LUFS
+- Write ID3v2.3 tags by default in Custom Mode
+- Changed clipping protection:
+  - Now specified with -c and 3 choice character option instead of a boolean
+  - Old -k functionality is now -c a
+  - New -c p functionality only provides clipping protection for positive gain values, which is now the default in Easy Mode
+- Removed strip tags option (-S)
+- Changed max peak level command line char from -K to -m
+- Changed behavior for Opus files:
+  - Introduced -o option with required char argument
+  - Support writing to header output gain
+  - default 'd' mode: Write standard ReplayGain tags, set output gain to 0
+  - 'r' mode: Write RFC 7845 R128_*_GAIN tags, set output gain to 0
+  - 't' and 'a' modes write the track gain and album gain to the header output gain, respectively
+  - Keep default loudness at -18 LUFS (can be changed with -l option)
+- Windows: Added resource file containing VERSIONINFO
+- Windows: Support static linking of dependencies
+- Linux: Enforce a minimum taglib version 1.12. Provide a static taglib build for the .deb package
+
+v2.0.1 (2022-05-18)
+- Set max thread sleep period to prevent hanging in multithreaded mode
+
+v2.0 (2022-05-10)
+- Changed project name to rsgain
+- Added "Easy Mode" with recursive directory scanning. Old command line syntax now known as "Custom Mode"
+- Added multithreaded scanning
+- Added override feature for Easy Mode
+
+v1.0.1 (2022-04-15)
+- Refactored scan.py script, renamed to loudgain-scanner.py
+- Strictly enforce libebur128 minimum version 1.2.4
+
+v1.0 (2022-02-21)
+- Fork from Moonbase59/loudgain v0.6.8
+- Native Windows port
