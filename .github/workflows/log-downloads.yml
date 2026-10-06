@@ -1,0 +1,35 @@
+name: Log downloads
+
+on:
+  schedule:
+    - cron: "30 18 * * *"   # runs daily at 12:00 AM IST (cron uses UTC)
+  workflow_dispatch:         # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch download count
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p stats
+          if [ ! -f stats/downloads.csv ]; then
+            echo "date,total_downloads" > stats/downloads.csv
+          fi
+          total=$(gh api repos/${{ github.repository }}/releases \
+            --jq '[.[].assets[].download_count] | add // 0')
+          echo "$(date -u +%F),$total" >> stats/downloads.csv
+
+      - name: Commit result
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add stats/downloads.csv
+          git commit -m "Log downloads" || exit 0
+          git push
