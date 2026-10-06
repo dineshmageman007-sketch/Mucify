@@ -22,6 +22,16 @@
 
 </div>
 
+## Feedback
+
+Tried it? I'd love to know how easy it was to set up and use.
+
+- Was installation smooth, or did you get stuck anywhere?
+- Anything confusing in the UI?
+- What's one thing you'd change?
+
+👉 [Leave quick feedback](https://github.com/dineshmageman007-sketch/Mucify/issues/new?title=Feedback&labels=feedback)
+
 ---
 
 ## Why Mucify
